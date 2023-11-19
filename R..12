@@ -1,0 +1,94 @@
+import React, { useState } from 'react';
+import { connect } from 'react-redux';
+import { updateQuantity, removeItem } from './actions';
+
+const Cart = (props) => {
+ const { cartItems, updateQuantity, removeItem } = props;
+ const [subtotal, setSubtotal] = useState(0);
+ const [shipping, setShipping] = useState(0);
+ const [total, setTotal] = useState(0);
+
+ useState(() => {
+    calculateSubtotal();
+    calculateShipping();
+    calculateTotal();
+ }, [cartItems]);
+
+ const calculateSubtotal = () => {
+    const newSubtotal = cartItems.reduce((total, item) => {
+      return total + item.price * item.quantity;
+    }, 0);
+    setSubtotal(newSubtotal);
+ };
+
+ const calculateShipping = () => {
+    const newShipping = subtotal >= 500 ? 0 : 25;
+    setShipping(newShipping);
+ };
+
+ const calculateTotal = () => {
+    setTotal(subtotal + shipping);
+ };
+
+ const handleIncrement = (item) => {
+    updateQuantity(item, item.quantity + 1);
+ };
+
+ const handleDecrement = (item) => {
+    if (item.quantity === 1) {
+      removeItem(item);
+    } else {
+      updateQuantity(item, item.quantity - 1);
+    }
+ };
+
+ return (
+    <div>
+      <h2>Cart</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Amount</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {cartItems.map((item) => (
+            <tr key={item.id}>
+              <td>{item.name}</td>
+              <td>{item.price}</td>
+              <td>
+                <button onClick={() => handleDecrement(item)}>-</button>
+                {item.quantity}
+                <button onClick={() => handleIncrement(item)}>+</button>
+              </td>
+              <td>{item.price * item.quantity}</td>
+              <td>
+                <button onClick={() => removeItem(item)}>Remove</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <h3>SUBTOTAL: ${subtotal.toFixed(2)}</h3>
+      <h3>SHIPPING: ${shipping.toFixed(2)}</h3>
+      <h3>TOTAL: ${total.toFixed(2)}</h3>
+    </div>
+ );
+};
+
+const mapStateToProps = (state) => {
+ return {
+    cartItems: state.cart.cartItems,
+ };
+};
+
+const mapDispatchToProps = {
+ updateQuantity,
+ removeItem,
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Cart);
